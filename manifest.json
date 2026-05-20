@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "1177 Journal Exporter",
+  "version": "1.0.0",
+  "author": "Victor Staflin",
+  "homepage_url": "https://github.com/VictorStaflin",
+  "description": "Säker, snabb och privat export av dina patientjournaler från 1177.se till interaktiva instrumentpaneler, Markdown och JSON.",
+  "permissions": ["activeTab", "scripting", "downloads", "storage"],
+  "host_permissions": [
+    "https://journalen.1177.se/JournalCategories/CareDocumentation*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://journalen.1177.se/JournalCategories/CareDocumentation*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

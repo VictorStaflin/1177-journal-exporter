@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>1177 Journal Exporter</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@300;400;600&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    :root {
+      --blue:      #005b9a;
+      --blue-dark: #004070;
+      --blue-light:#e8f2fb;
+      --green:     #1a7a4a;
+      --green-bg:  #e8f7ef;
+      --red:       #c0392b;
+      --red-bg:    #fdecea;
+      --text:      #1a1a2e;
+      --muted:     #637085;
+      --border:    #d6e4f0;
+      --bg:        #f4f8fc;
+      --white:     #ffffff;
+      --radius:    12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 340px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 12px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--blue);
+      padding: 16px 18px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo {
+      width: 32px; height: 32px;
+      background: var(--white);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    }
+    .header-text h1 {
+      font-family: 'Source Serif 4', serif;
+      font-weight: 600; font-size: 15px; color: #fff;
+      line-height: 1.2;
+    }
+    .header-text p {
+      font-size: 11px; color: rgba(255,255,255,.75); margin-top: 2px;
+    }
+
+    /* ── Status banner ── */
+    #status-banner {
+      margin: 12px 14px 4px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      display: flex; align-items: center; gap: 8px;
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      border: 1.5px solid var(--border);
+      line-height: 1.4;
+    }
+    #status-banner.success { background: var(--green-bg); color: var(--green); border-color: #aadec5; }
+    #status-banner.error   { background: var(--red-bg);   color: var(--red);   border-color: #f5b7b1; }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .status-dot.info { background-color: var(--muted); }
+    .status-dot.loading { background-color: var(--blue); animation: status-pulse 1.5s infinite; }
+    .status-dot.success { background-color: var(--green); }
+    .status-dot.error { background-color: var(--red); }
+    @keyframes status-pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
+
+    /* ── Step Cards ── */
+    .steps-container {
+      margin: 10px 14px;
+    }
+    .step-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .step-card.active {
+      border-color: var(--blue);
+      box-shadow: 0 4px 12px rgba(0, 91, 154, 0.04);
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: var(--blue-light);
+      color: var(--blue-dark);
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      margin-right: 8px;
+      transition: background .2s, color .2s;
+    }
+    .step-card.active .step-badge {
+      background: var(--blue);
+      color: #fff;
+    }
+    .step-badge.completed {
+      background: var(--green-bg);
+      color: var(--green);
+    }
+    .step-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .step-desc {
+      font-size: 10.5px;
+      color: var(--muted);
+      margin-left: 30px;
+      margin-bottom: 8px;
+    }
+    .step-content {
+      margin-left: 30px;
+    }
+
+    /* ── Format Grid ── */
+    .format-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+    .format-btn.span-2 {
+      grid-column: span 2;
+    }
+    .format-btn {
+      position: relative;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      transition: border-color .15s, background .15s;
+    }
+    .format-btn:hover {
+      border-color: var(--blue);
+    }
+    .format-btn.active {
+      border-color: var(--blue);
+      background: var(--blue-light);
+    }
+    .format-btn input {
+      display: none;
+    }
+    .fmt-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .fmt-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .fmt-desc {
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    /* ── Actions ── */
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, transform .1s, box-shadow .15s;
+    }
+    .primary-btn {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 91, 154, 0.15);
+    }
+    .primary-btn:hover:not(:disabled) {
+      background: var(--blue-dark);
+      box-shadow: 0 4px 10px rgba(0, 91, 154, 0.25);
+    }
+    .primary-btn:active:not(:disabled) {
+      transform: scale(.98);
+    }
+    .secondary-btn {
+      background: var(--white);
+      color: var(--blue);
+      border: 1.5px solid var(--border);
+    }
+    .secondary-btn:hover:not(:disabled) {
+      border-color: var(--blue);
+      background: var(--blue-light);
+    }
+    .secondary-btn:active:not(:disabled) {
+      transform: scale(.98);
+    }
+    .action-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      box-shadow: none !important;
+    }
+
+    /* ── Progress Bar ── */
+    #progress-container {
+      margin-top: 10px;
+      background: #fdfefe;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    #progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), #4a90e2);
+      border-radius: 3px;
+      transition: width 0.1s ease-out;
+    }
+
+    /* ── Privacy Card ── */
+    .privacy-card {
+      margin: 8px 14px 4px;
+      font-size: 10.5px;
+      color: var(--muted);
+      line-height: 1.5;
+      padding: 12px 14px;
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      border-left: 3px solid var(--blue);
+    }
+    .privacy-card h4 {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .privacy-card p {
+      margin-bottom: 6px;
+    }
+    .privacy-card p:last-child {
+      margin-bottom: 0;
+    }
+    .privacy-card strong {
+      color: var(--text);
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 10.5H13.5V4.5C13.5 3.67157 12.8284 3 12 3C11.1716 3 10.5 3.67157 10.5 4.5V10.5H4.5C3.67157 10.5 3 11.1716 3 12C3 12.8284 3.67157 13.5 4.5 13.5H10.5V19.5C10.5 20.3284 11.1716 21 12 21C12.8284 21 13.5 20.3284 13.5 19.5V13.5H19C19.8284 13.5 20.5 12.8284 20.5 12C20.5 11.1716 19.8284 10.5 19 10.5Z" fill="#005b9a"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>1177 Journal Exporter</h1>
+      <p>Exportera dina journalanteckningar</p>
+    </div>
+  </header>
+
+  <div id="status-banner">
+    <span id="status-dot" class="status-dot loading"></span>
+    <span id="status-text">Kontrollerar sidan…</span>
+  </div>
+
+  <div class="steps-container">
+    
+    <!-- STEP 1: SELECT FORMAT -->
+    <div id="step1-card" class="step-card active">
+      <div class="step-header">
+        <span id="step1-badge" class="step-badge">1</span>
+        <span class="step-title">Välj exportformat</span>
+      </div>
+      <div class="step-desc">Välj Markdown (.md) för säker lokal AI-analys.</div>
+      <div class="step-content">
+        <div class="format-grid">
+          
+          <label class="format-btn active span-2" data-format="md">
+            <input type="radio" name="format" value="md" checked>
+            <div class="fmt-info">
+              <span class="fmt-name">Markdown (.md)</span>
+              <span class="fmt-desc">Optimalt för lokal AI (t.ex. Ollama)</span>
+            </div>
+          </label>
+
+          <label class="format-btn" data-format="html">
+            <input type="radio" name="format" value="html">
+            <div class="fmt-info">
+              <span class="fmt-name">HTML (.html)</span>
+              <span class="fmt-desc">Läsbar rapport</span>
+            </div>
+          </label>
+
+          <label class="format-btn" data-format="txt">
+            <input type="radio" name="format" value="txt">
+            <div class="fmt-info">
+              <span class="fmt-name">Text (.txt)</span>
+              <span class="fmt-desc">Ren textfil</span>
+            </div>
+          </label>
+
+          <label class="format-btn" data-format="csv">
+            <input type="radio" name="format" value="csv">
+            <div class="fmt-info">
+              <span class="fmt-name">CSV (.csv)</span>
+              <span class="fmt-desc">Kalkylblad</span>
+            </div>
+          </label>
+
+          <label class="format-btn" data-format="json">
+            <input type="radio" name="format" value="json">
+            <div class="fmt-info">
+              <span class="fmt-name">JSON (.json)</span>
+              <span class="fmt-desc">Strukturerad data</span>
+            </div>
+          </label>
+          
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: EXPAND COLLAPSED ENTRIES -->
+    <div id="step2-card" class="step-card">
+      <div class="step-header">
+        <span id="step2-badge" class="step-badge">2</span>
+        <span class="step-title">Expandera journalen</span>
+      </div>
+      <div class="step-desc">Öppna dolda poster så att all detaljtext kan läsas in.</div>
+      <div class="step-content">
+        <button id="expand-btn" class="action-btn secondary-btn" disabled>
+          <span id="expand-label">Öppna dolda poster</span>
+        </button>
+        
+        <div id="progress-container" style="display: none;">
+          <div class="progress-header">
+            <span id="progress-status">Öppnar poster...</span>
+            <span id="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="progress-bar-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: EXPORT AND SAVE -->
+    <div id="step3-card" class="step-card">
+      <div class="step-header">
+        <span id="step3-badge" class="step-badge">3</span>
+        <span class="step-title">Spara och ladda ned</span>
+      </div>
+      <div class="step-desc">Ladda ned den färdigställda exporten till din dator.</div>
+      <div class="step-content">
+        <button id="export-btn" class="action-btn primary-btn" disabled>
+          <span id="btn-label">Spara journal</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="privacy-card">
+    <h4>Känslig hälsoinformation</h4>
+    <p>Din patientjournal innehåller djupt personliga uppgifter. <strong>Dela aldrig din exporterade fil öppet</strong> på internet eller med publika molnbaserade AI-tjänster (som ChatGPT eller Claude).</p>
+    <p><strong>Tips för AI-analys:</strong> Om du vill analysera din journal med AI-modeller, rekommenderar vi starkt att du använder en <strong>lokal och själv-hostad AI</strong> på din egen dator (t.ex. via <em>Ollama</em> eller <em>LM Studio</em>). På så sätt lämnar din känsliga data aldrig din egen enhet.</p>
+  </div>
+
+  <footer style="text-align: center; margin-top: 14px; margin-bottom: 4px; font-size: 10px; color: var(--muted);">
+    Öppen källkod — Utvecklad av <a href="https://github.com/VictorStaflin" target="_blank" rel="noopener noreferrer" style="color: var(--blue); text-decoration: none; font-weight: 600; outline: none;">Victor Staflin</a>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
